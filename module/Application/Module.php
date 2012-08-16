@@ -32,7 +32,7 @@ class Module
             'Zend\Loader\StandardAutoloader' => array(
                 'namespaces' => array(
                     __NAMESPACE__ => __DIR__ . '/src/' . __NAMESPACE__,
-                    'Doctrine' => '../../vendor/ZF2/library/Doctrine',
+                    'Doctrine' =>  __DIR__ .'/../../vendor/ZF2/library/Doctrine',
                 ),
             ),
         );

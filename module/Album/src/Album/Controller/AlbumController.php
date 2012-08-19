@@ -1,124 +1,76 @@
 <?php
 
+// module/Album/src/Album/Controller/AlbumController.php:
+
 namespace Album\Controller;
 
-use Zend\Mvc\Controller\AbstractActionController,
-    Zend\View\Model\ViewModel, 
-    Album\Form\AlbumForm,
-    Doctrine\ORM\EntityManager,
-    Album\Entity\Album;
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\View\Model\ViewModel;
+use Album\Model\Album;          // <-- Add this import
+use Album\Form\AlbumForm;       // <-- Add this import
+use Doctrine\ORM\EntityManager;     // <-- Add this import
 
-class AlbumController extends AbstractActionController
-{
-    /**
-     * @var Doctrine\ORM\EntityManager
-     */
-    protected $em;
+class AlbumController extends AbstractActionController {
 
-    public function setEntityManager(EntityManager $em)
-    {
-        $this->em = $em;
-    }
- 
-    public function getEntityManager()
-    {
-        if (null === $this->em) {
-            $this->em = $this->getServiceLocator()->get('Doctrine\ORM\EntityManager');
-        }
-        return $this->em;
-    } 
+    protected $albumTable;
+    /**             
+    * @var Doctrine\ORM\EntityManager
+    */                
+    protected $em;    
 
-    public function indexAction()
-    {
+    public function indexAction() {
         return new ViewModel(array(
-            'albums' => $this->getEntityManager()->getRepository('Album\Entity\Album')->findAll() 
-        ));
+                    'albums' => $this->getAlbumTable()->fetchAll(),
+                ));
     }
 
+// Add content to this method:
     public function addAction()
     {
         $form = new AlbumForm();
-        $form->get('submit')->setAttribute('label', 'Add');
+        $form->get('submit')->setValue('Add');
 
         $request = $this->getRequest();
         if ($request->isPost()) {
             $album = new Album();
-            
             $form->setInputFilter($album->getInputFilter());
-            $form->setData($request->post());
-            if ($form->isValid()) { 
-                $album->populate($form->getData()); 
-                $this->getEntityManager()->persist($album);
-                $this->getEntityManager()->flush();
+            $form->setData($request->getPost());
 
-                // Redirect to list of albums
-                return $this->redirect()->toRoute('album'); 
-            }
-        }
-
-        return array('form' => $form);
-    }
-
-    public function editAction()
-    {
-        $id = (int)$this->getEvent()->getRouteMatch()->getParam('id');
-        if (!$id) {
-            return $this->redirect()->toRoute('album', array('action'=>'add'));
-        } 
-        $album = $this->getEntityManager()->find('Album\Entity\Album', $id);
-
-        $form = new AlbumForm();
-        $form->setBindOnValidate(false);
-        $form->bind($album);
-        $form->get('submit')->setAttribute('label', 'Edit');
-        
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $form->setData($request->post());
             if ($form->isValid()) {
-                $form->bindValues();
-                $this->getEntityManager()->flush();
+                $album->exchangeArray($form->getData());
+                $this->getAlbumTable()->saveAlbum($album);
 
                 // Redirect to list of albums
                 return $this->redirect()->toRoute('album');
             }
         }
-
-        return array(
-            'id' => $id,
-            'form' => $form,
-        );
+        return array('form' => $form);
     }
 
-    public function deleteAction()
+    public function editAction() {
+        
+    }
+
+    public function deleteAction() {
+        
+    }
+
+    public function getAlbumTable() {
+        if (!$this->albumTable) {
+            $sm = $this->getServiceLocator();
+            $this->albumTable = $sm->get('Album\Model\AlbumTable');
+        }
+        return $this->albumTable;
+    }
+    
+    public function getEntityManager()
     {
-        $id = (int)$this->getEvent()->getRouteMatch()->getParam('id');
-        if (!$id) {
-            return $this->redirect()->toRoute('album');
+        if (null === $this->em) {
+            $this->em = $this->getServiceLocator()->get('doctrine.entitymanager.orm_default');
         }
+        return $this->em;
+    }    
 
-        $request = $this->getRequest();
-        if ($request->isPost()) {
-            $del = $request->post()->get('del', 'No');
-            if ($del == 'Yes') {
-                $id = (int)$request->post()->get('id');
-                $album = $this->getEntityManager()->find('Album\Entity\Album', $id);
-                if ($album) {
-                    $this->getEntityManager()->remove($album);
-                    $this->getEntityManager()->flush();
-                }
-            }
-
-            // Redirect to list of albums
-            return $this->redirect()->toRoute('default', array(
-                'controller' => 'album',
-                'action'     => 'index',
-            ));
-        }
-
-        return array(
-            'id' => $id,
-            'album' => $this->getEntityManager()->find('Album\Entity\Album', $id)->getArrayCopy()
-        );
-    }
 }
+
+?>

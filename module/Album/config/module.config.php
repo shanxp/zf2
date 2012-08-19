@@ -1,6 +1,7 @@
 <?php
 namespace Album;
 // module/Album/conﬁg/module.conﬁg.php:
+
 return array(
     'controllers' => array(
         'invokables' => array(
@@ -35,6 +36,7 @@ return array(
     ),
     
 // Doctrine config
+    
     'doctrine' => array(
         'driver' => array(
             __NAMESPACE__ . '_driver' => array(
@@ -44,8 +46,12 @@ return array(
             ),
             'orm_default' => array(
                 'drivers' => array(
-                    __NAMESPACE__ . '\Entity' => __NAMESPACE__ . '_driver'
-                )
+                    __NAMESPACE__ . '\Entity' => __NAMESPACE__ . '_driver',
+                    'class' => 'Doctrine\ORM\Mapping\Driver\AnnotationDriver',
+                    'cache' => 'array',
+                    'namespace' => 'Album',
+                    'paths' => array('module/Album/src/Album/Entity')
+                ),
             )
         )
     )    
